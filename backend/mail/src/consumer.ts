@@ -4,11 +4,13 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const sendOtpEmail = async (to: string, subject: string, body: string) => {
-  if (process.env.RESEND_API_KEY) {
+  const resendApiKey = process.env.RESEND_API_KEY?.trim();
+
+  if (resendApiKey) {
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        Authorization: `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -28,18 +30,29 @@ const sendOtpEmail = async (to: string, subject: string, body: string) => {
     return;
   }
 
+  const smtpUser = process.env.SMTP_USER?.trim();
+  const smtpPassword = process.env.SMTP_PASSWORD?.trim();
+
+  if (!smtpUser || !smtpPassword) {
+    throw new Error(
+      "SMTP_USER and SMTP_PASSWORD are required when RESEND_API_KEY is empty"
+    );
+  }
+
+  const smtpPort = Number(process.env.SMTP_PORT || 587);
+  const smtpSecure = process.env.SMTP_SECURE === "true";
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: smtpPort,
+    secure: smtpSecure,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD,
+      user: smtpUser,
+      pass: smtpPassword,
     },
   });
 
   await transporter.sendMail({
-    from: process.env.SMTP_USER,
+    from: process.env.SMTP_FROM || smtpUser,
     to,
     subject,
     text: body,
@@ -59,7 +72,11 @@ export const startSendOtpConsumer = async () => {
 
     await channel.assertQueue("send-otp", { durable: true });
 
-    console.log("✅ Mail Service consumer started, listening for otp emails");
+    console.log(
+      `✅ Mail Service consumer started using ${
+        process.env.RESEND_API_KEY?.trim() ? "Resend" : "SMTP"
+      }`
+    );
 
     channel.consume("send-otp", async (msg) => {
       if (msg) {

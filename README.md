@@ -22,9 +22,10 @@ RabbitMQ provider. Image messages continue to use Cloudinary, configured by
 the `CLOUDINARY_*` variables.
 
 The mail worker supports Resend through `RESEND_API_KEY` and `EMAIL_FROM`.
-When `RESEND_API_KEY` is absent, it falls back to local Gmail SMTP using
-`SMTP_USER` and `SMTP_PASSWORD`. Prefer Resend or another HTTPS email API on
-Render Free because outbound SMTP ports may be blocked there.
+When `RESEND_API_KEY` is absent, it uses configurable SMTP through
+`SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and
+`SMTP_FROM`. Brevo SMTP is suitable for free production testing; local
+development can use Gmail SMTP.
 
 ## Deployment
 
