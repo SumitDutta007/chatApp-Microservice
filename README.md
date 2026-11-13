@@ -21,11 +21,11 @@ local broker and Render can use the broker URL supplied by the selected
 RabbitMQ provider. Image messages continue to use Cloudinary, configured by
 the `CLOUDINARY_*` variables.
 
-The mail worker supports Resend through `RESEND_API_KEY` and `EMAIL_FROM`.
-When `RESEND_API_KEY` is absent, it uses configurable SMTP through
-`SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and
-`SMTP_FROM`. Brevo SMTP is suitable for free production testing; local
-development can use Gmail SMTP.
+The mail worker supports Brevo through `BREVO_API_KEY` and `EMAIL_FROM`.
+It also supports Resend through `RESEND_API_KEY` and `EMAIL_FROM`. When both
+API keys are absent, it uses configurable SMTP through `SMTP_HOST`,
+`SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, and `SMTP_FROM`.
+The Brevo HTTPS API avoids SMTP port restrictions on Render.
 
 ## Deployment
 

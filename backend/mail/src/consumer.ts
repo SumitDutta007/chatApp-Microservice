@@ -4,7 +4,38 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const sendOtpEmail = async (to: string, subject: string, body: string) => {
+  const brevoApiKey = process.env.BREVO_API_KEY?.trim();
   const resendApiKey = process.env.RESEND_API_KEY?.trim();
+
+  if (brevoApiKey) {
+    const senderEmail = process.env.EMAIL_FROM || process.env.SMTP_FROM;
+
+    if (!senderEmail) {
+      throw new Error("EMAIL_FROM or SMTP_FROM is required for Brevo");
+    }
+
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "api-key": brevoApiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { email: senderEmail },
+        to: [{ email: to }],
+        subject,
+        textContent: body,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Brevo rejected the email: ${response.status} ${await response.text()}`
+      );
+    }
+
+    return;
+  }
 
   if (resendApiKey) {
     const response = await fetch("https://api.resend.com/emails", {
@@ -74,7 +105,11 @@ export const startSendOtpConsumer = async () => {
 
     console.log(
       `✅ Mail Service consumer started using ${
-        process.env.RESEND_API_KEY?.trim() ? "Resend" : "SMTP"
+        process.env.BREVO_API_KEY?.trim()
+          ? "Brevo API"
+          : process.env.RESEND_API_KEY?.trim()
+            ? "Resend"
+            : "SMTP"
       }`
     );
 
